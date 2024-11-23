@@ -100,7 +100,7 @@ public:
         }
     }
 
-    void loadRoadNetwork(Graph &graph, const string &filename)
+    void loadRoadNetwork(const string filename)
     {
         ifstream file(filename);
         string line;
@@ -119,7 +119,7 @@ public:
             getline(ss, end, ',');
             ss>>weight;
 
-            graph.addEdge(start, end, weight);
+            addEdge(start, end, weight);
         }
 
         file.close();
@@ -130,13 +130,8 @@ int main()
 {
     Graph graph(100);
 
-    // Sample data
-    graph.addEdge("A", "B", 5);
-    graph.addEdge("B", "C", 10);
-    graph.addEdge("A", "C", 15);
-    graph.addEdge("C", "D", 7);
-    graph.addEdge("D", "E", 3);
-    graph.addEdge("B", "D", 9);
+    
+    graph.loadRoadNetwork("road_network.csv");
     graph.displayGraph();
 
     return 0;
