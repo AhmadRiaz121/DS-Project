@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <sstream>
 using namespace std;
 
 class Edge
@@ -100,7 +99,7 @@ public:
         }
     }
 
-    void loadRoadNetwork(const string filename)
+    void loadRoadNetwork(const string &filename)
     {
         ifstream file(filename);
         string line;
@@ -110,20 +109,39 @@ public:
 
         while (getline(file, line))
         {
-            string start, end;
+            string start, end, weightStr;
             double weight;
-            stringstream ss(line);
+            int i = 0, j = 0;
 
-            // Read the start intersection, end intersection, and weight
-            getline(ss, start, ',');
-            getline(ss, end, ',');
-            ss>>weight;
+            // Extract start intersection
+            while (line[i] != ',')
+            {
+                start += line[i++];
+            }
+            i++;
 
+            // Extract end intersection
+            while (line[i] != ',')
+            {
+                end += line[i++];
+            }
+            i++;
+
+            // Extract weight
+            while (i < line.length())
+            {
+                weightStr += line[i++];
+            }
+
+            // Convert weight to double
+            weight = stod(weightStr);
+            
             addEdge(start, end, weight);
         }
 
         file.close();
     }
+
 };
 
 int main()
