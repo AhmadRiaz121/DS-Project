@@ -111,31 +111,31 @@ public:
         {
             string start, end, weightStr;
             double weight;
-            int i = 0, j = 0;
+            int i=0, j=0;
 
             // Extract start intersection
-            while (line[i] != ',')
+            while (line[i]!=',')
             {
-                start += line[i++];
+                start+=line[i++];
             }
             i++;
 
             // Extract end intersection
-            while (line[i] != ',')
+            while (line[i]!=',')
             {
-                end += line[i++];
+                end+=line[i++];
             }
             i++;
 
             // Extract weight
-            while (i < line.length())
+            while (i<line.length())
             {
-                weightStr += line[i++];
+                weightStr+=line[i++];
             }
 
             // Convert weight to double
-            weight = stod(weightStr);
-            
+            weight=stod(weightStr);
+
             addEdge(start, end, weight);
         }
 
@@ -148,9 +148,51 @@ int main()
 {
     Graph graph(100);
 
-    
     graph.loadRoadNetwork("road_network.csv");
-    graph.displayGraph();
+    while (true)
+    {
+        cout<<"Menu:\n";
+        cout<<"1. Add edge\n";
+        cout<<"2. Display graph\n";
+        cout<<"3. Exit\n";
+        cout<<"Enter your choice: ";
+        int choice;
+        cin>>choice;
+
+        if (choice==1)
+        {
+            string start, end;
+            double weight;
+
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<"Enter end intersection: ";
+            cin>>end;
+            cout<<"Enter travel time: ";
+            cin>>weight;
+
+            graph.addEdge(start, end, weight);
+
+            // Append the edge to the file
+            ofstream file("road_network.csv", ios::app);
+            file<<start<<","<<end<<","<<weight<<"\n";
+            file.close();
+
+            cout<<"Edge added and saved to file.\n";
+        }
+        else if (choice == 2)
+        {
+            graph.displayGraph();
+        }
+        else if (choice == 3)
+        {
+            break;
+        }
+        else
+        {
+            cout<<"Invalid choice. Please try again.\n";
+        }
+    }
 
     return 0;
 }
