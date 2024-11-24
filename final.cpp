@@ -313,10 +313,174 @@ class VehicleRoutingSystem
         }
     }
 };
+
+class Intersection
+{
+    public:
+    string id;
+    int greenTime;
+    Intersection *next;
+    Intersection(string id = "", int greenTime = 0 )
+    {
+        this->id=id;
+        this->greenTime=greenTime;
+        next=NULL;
+    }
+};
+
+class EmergencyVehicle
+{
+    public:
+    string vehicleID;
+    string startIntersection;
+    string endIntersection;
+    string priorityLevel;
+    EmergencyVehicle *next;
+    EmergencyVehicle(string vehicleID = "", string startIntersection = "", string endIntersection = "", string priorityLevel = "" )
+    {
+        this->vehicleID=vehicleID;
+        this->startIntersection=startIntersection;
+        this->endIntersection=endIntersection;
+        this->priorityLevel=priorityLevel;
+        next=NULL;
+    }
+};
+
+class TrafficSignalManager
+{
+    public:
+    Intersection *head;
+    EmergencyVehicle *emergencyHead;
+    TrafficSignalManager()
+    {
+        head=NULL;
+        emergencyHead=NULL;
+    }
+
+    void loadTrafficSignalTimings(const string &filename)
+    {
+        ifstream file(filename);
+        string line;
+        getline(file, line);
+
+        while(getline(file, line))
+        {
+            string intersectionID;
+            int greenTime=0;
+            int i=0;
+
+            // Extract intersectionID
+            while(line[i]!=',' && i<line.length())
+            {
+                intersectionID+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract greenTime
+            while(i<line.length())
+            {
+                greenTime=greenTime*10+(line[i]-'0');
+                i++;
+            }
+
+            Intersection *newIntersection=new Intersection(intersectionID, greenTime);
+            newIntersection->next=head;
+            head=newIntersection;
+        }
+        file.close();
+    }
+
+    void loadEmergencyVehicles(const string &filename)
+    {
+        ifstream file(filename);
+        string line;
+        getline(file, line);
+
+        while(getline(file, line))
+        {
+            string vehicleID, startIntersection, endIntersection, priorityLevel;
+            int i=0;
+
+            // Extract vehicleID
+            while(line[i]!=',' && i<line.length())
+            {
+                vehicleID+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract startIntersection
+            while(line[i]!=',' && i<line.length())
+            {
+                startIntersection+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract endIntersection
+            while(line[i]!=',' && i<line.length())
+            {
+                endIntersection+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract priorityLevel
+            while(i<line.length())
+            {
+                priorityLevel+=line[i];
+                i++;
+            }
+
+            EmergencyVehicle *newEmergencyVehicle=new EmergencyVehicle(vehicleID, startIntersection, endIntersection, priorityLevel);
+            newEmergencyVehicle->next=emergencyHead;
+            emergencyHead=newEmergencyVehicle;
+        }
+        file.close();
+    }
+
+    void manageTraffic()
+    {
+        Intersection *current=head;
+        while(current!=NULL)
+        {
+            cout<<"Green signal at Intersection "<<current->id<<" for "<<current->greenTime<<" seconds.\n";
+            current=current->next;
+        }
+
+        while(emergencyHead!=NULL)
+        {
+            EmergencyVehicle *ev=emergencyHead;
+            emergencyHead=emergencyHead->next;
+            cout<<"Emergency Override for Vehicle "<<ev->vehicleID<<" from "<<ev->startIntersection<<" to "<<ev->endIntersection<<"\n";
+            delete ev;
+        }
+    }
+
+    ~TrafficSignalManager()
+    {
+        while(head!=NULL)
+        {
+            Intersection *temp=head;
+            head=head->next;
+            delete temp;
+        }
+
+        while(emergencyHead!=NULL)
+        {
+            EmergencyVehicle *temp=emergencyHead;
+            emergencyHead=emergencyHead->next;
+            delete temp;
+        }
+    }
+};
 int main()
 {
     Graph graph(100);
-
+    TrafficSignalManager tsm;
+    tsm.loadTrafficSignalTimings("traffic_signal_timings.csv");
+    tsm.loadEmergencyVehicles("emergency_vehicles.csv");
     graph.loadRoadNetwork("road_network.csv");
     while (true)
     {
@@ -325,7 +489,8 @@ int main()
         cout<<"2. Display graph\n";
         cout<<"3. Shortest path\n";
         cout<<"4. Route vehicles\n";
-        cout<<"5. Exit\n";
+        cout<<"5. Manage Traffic\n";
+        cout<<"6. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
@@ -335,11 +500,11 @@ int main()
             string start, end;
             double weight;
 
-            cout<<"Enter start intersection: "<<endl;
+            cout<<"Enter start intersection: ";
             cin>>start;
-            cout<<"Enter end intersection: "<<endl;
+            cout<<"Enter end intersection: ";
             cin>>end;
-            cout<<"Enter travel time: "<<endl;
+            cout<<"Enter travel time: ";
             cin>>weight;
 
             graph.addEdge(start, end, weight);
@@ -358,9 +523,9 @@ int main()
         else if (choice==3)
         {
             string start, end;
-            cout<<"Enter start intersection: "<<endl;
+            cout<<"Enter start intersection: ";
             cin>>start;
-            cout<<"Enter end intersection: "<<endl;
+            cout<<"Enter end intersection: ";
             cin>>end;
             cout<<endl;
             graph.dijkstra(start, end);
@@ -375,6 +540,10 @@ int main()
             cout<<endl;
         }
         else if (choice==5)
+        {
+            tsm.manageTraffic();
+        }
+        else if (choice==6)
         {
             break;
         }
