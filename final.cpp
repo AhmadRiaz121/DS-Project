@@ -142,8 +142,177 @@ public:
         file.close();
     }
 
+    void dijkstra(const string &start, const string &end)
+    {
+        int startIndex=getNodesIndex(start);
+        int endIndex=getNodesIndex(end);
+
+        if (startIndex==-1 || endIndex==-1)
+        {
+            cout<<"Invalid start or end intersection.\n";
+            return;
+        }
+
+        double *distances=new double[nodeCount];
+        bool *visited=new bool[nodeCount];
+        int *previous=new int[nodeCount];
+
+        for (int i=0; i<nodeCount;i++)
+        {
+            distances[i]=infinity;
+            visited[i]=false;
+            previous[i]=-1;
+        }
+
+        distances[startIndex]=0;
+
+        while (true)
+        {
+            int minIndex=-1;
+            double minDistance=infinity;
+
+            for (int i=0; i<nodeCount;i++)
+            {
+                if (!visited[i] && distances[i]<minDistance)
+                {
+                    minDistance=distances[i];
+                    minIndex=i;
+                }
+            }
+
+            if (minIndex==-1)
+            {
+                break;
+            }
+
+            visited[minIndex]=true;
+
+            Edge *current=nodes[minIndex].edges;
+            while (current)
+            {
+                int neighbor=current->end;
+                double weight=current->weight;
+
+                if (!visited[neighbor] && distances[minIndex] + weight<distances[neighbor])
+                {
+                    distances[neighbor]=distances[minIndex] + weight;
+                    previous[neighbor]=minIndex;
+                }
+
+                current=current->next;
+            }
+        }
+
+        if (distances[endIndex]==infinity)
+        {
+            cout<<"No path exists between "<<start<<" and "<<end<<".\n";
+        }
+        else
+        {
+            cout<<"Shortest path from "<<start<<" to "<<end<<" is "<<distances[endIndex]<<".\n";
+
+            int path[nodeCount];
+            int count=0;
+            for (int at=endIndex; at != -1; at=previous[at])
+            {
+                path[count++]=at;
+            }
+
+            cout<<"Path: ";
+            for (int i=count-1;i>=0;i--)
+            {
+                if (i<count-1)
+                {
+                    cout<<" -> ";
+                }
+                cout<<nodes[path[i]].id;
+            }
+            cout<<"\n";
+        }
+
+        delete[] distances;
+        delete[] visited;
+        delete[] previous;
+    }
+
+
 };
 
+class Vehicle
+{
+    public:
+    string vehicleID;
+    string startIntersection;
+    string endIntersection;
+    Vehicle()
+    {
+        vehicleID="";
+        startIntersection="";
+        endIntersection="";
+    }
+    Vehicle(const string &vehicleID, const string &start, const string &end)
+    {
+        this->vehicleID=vehicleID;
+        this->startIntersection=start;
+        this->endIntersection=end;
+    }
+};
+
+class VehicleRoutingSystem
+{
+    public:
+    Graph &graph;
+    Vehicle vehicles[100];
+    int vehicleCount;
+    VehicleRoutingSystem(Graph &graph) : graph(graph), vehicleCount(0) {}
+
+    void loadVehicles(const string &filename)
+    {
+        ifstream file(filename);
+        string line;
+
+        // Skip the header line
+        getline(file, line);
+
+        while (getline(file, line))
+        {
+            string vehicleID, start, end;
+            int i=0;
+
+            // Extract vehicle ID
+            while (line[i]!=',')
+            {
+                vehicleID+=line[i++];
+            }
+            i++;
+
+            // Extract start intersection
+            while (line[i]!=',')
+            {
+                start+=line[i++];
+            }
+            i++;
+
+            // Extract end intersection
+            while (i<line.length())
+            {
+                end+=line[i++];
+            }
+
+            vehicles[vehicleCount++]=Vehicle(vehicleID, start, end);
+        }
+
+        file.close();
+    }
+
+    void routeVehicles()
+    {
+        for (int i=0;i<vehicleCount;i++)
+        {
+            graph.dijkstra(vehicles[i].startIntersection, vehicles[i].endIntersection);
+        }
+    }
+};
 int main()
 {
     Graph graph(100);
@@ -154,7 +323,9 @@ int main()
         cout<<"Menu:\n";
         cout<<"1. Add edge\n";
         cout<<"2. Display graph\n";
-        cout<<"3. Exit\n";
+        cout<<"3. Shortest path\n";
+        cout<<"4. Route vehicles\n";
+        cout<<"5. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
@@ -164,11 +335,11 @@ int main()
             string start, end;
             double weight;
 
-            cout<<"Enter start intersection: ";
+            cout<<"Enter start intersection: "<<endl;
             cin>>start;
-            cout<<"Enter end intersection: ";
+            cout<<"Enter end intersection: "<<endl;
             cin>>end;
-            cout<<"Enter travel time: ";
+            cout<<"Enter travel time: "<<endl;
             cin>>weight;
 
             graph.addEdge(start, end, weight);
@@ -180,11 +351,30 @@ int main()
 
             cout<<"Edge added and saved to file.\n";
         }
-        else if (choice == 2)
+        else if (choice==2)
         {
             graph.displayGraph();
         }
-        else if (choice == 3)
+        else if (choice==3)
+        {
+            string start, end;
+            cout<<"Enter start intersection: "<<endl;
+            cin>>start;
+            cout<<"Enter end intersection: "<<endl;
+            cin>>end;
+            cout<<endl;
+            graph.dijkstra(start, end);
+            cout<<endl;
+        }
+        else if (choice==4)
+        {
+            VehicleRoutingSystem vrs(graph);
+            vrs.loadVehicles("vehicles.csv");
+            cout<<endl;
+            vrs.routeVehicles();
+            cout<<endl;
+        }
+        else if (choice==5)
         {
             break;
         }
