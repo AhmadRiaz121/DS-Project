@@ -320,7 +320,7 @@ class Intersection
     string id;
     int greenTime;
     Intersection *next;
-    Intersection(string id = "", int greenTime = 0 )
+    Intersection(string id="", int greenTime=0 )
     {
         this->id=id;
         this->greenTime=greenTime;
@@ -336,7 +336,7 @@ class EmergencyVehicle
     string endIntersection;
     string priorityLevel;
     EmergencyVehicle *next;
-    EmergencyVehicle(string vehicleID = "", string startIntersection = "", string endIntersection = "", string priorityLevel = "" )
+    EmergencyVehicle(string vehicleID="", string startIntersection="", string endIntersection="", string priorityLevel="" )
     {
         this->vehicleID=vehicleID;
         this->startIntersection=startIntersection;
@@ -475,13 +475,203 @@ class TrafficSignalManager
         }
     }
 };
+
+class RoadSegment
+{
+    public:
+    string startIntersection;
+    string endIntersection;
+    int travelTime;
+    bool isBlocked;
+    RoadSegment *next;
+    RoadSegment(string start="", string end="", int time=0, bool blocked=false)
+    {
+        this->startIntersection=start;
+        this->endIntersection=end;
+        this->travelTime=time;
+        this->isBlocked=blocked;
+        next=NULL;
+    }
+};
+
+class RoadNetwork
+{
+    public:
+    RoadSegment *head;
+    RoadNetwork()
+    {
+        head=NULL;
+    }
+
+    void addRoadSegment(const string &start, const string &end, int travelTime)
+    {
+        RoadSegment *newRoad=new RoadSegment(start, end, travelTime, false);
+        newRoad->next=head;
+        head=newRoad;
+    }
+
+    void loadRoadNetwork(const string &filename)
+    {
+        ifstream file(filename);
+        if(!file.is_open())
+        {
+            cout<<"Error opening file.\n";
+            return;
+        }
+
+        string line;
+        getline(file, line);
+
+        while(getline(file, line))
+        {
+            string start="", end="", timeStr="";
+            int i=0;
+
+            // Extract start intersection
+            while(i<line.length() && line[i]!=',')
+            {
+                start+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract end intersection
+            while(i<line.length() && line[i]!=',')
+            {
+                end+=line[i];
+                i++;
+            }
+            i++;
+
+            // Extract travel time
+            while(i<line.length())
+            {
+                timeStr+=line[i];
+                i++;
+            }
+
+            int travelTime=stoi(timeStr);
+            addRoadSegment(start, end, travelTime);
+        }
+        file.close();
+    }
+
+    void loadAccidentOrClosures(const string &filename)
+    {
+        ifstream file(filename);
+        if(!file.is_open())
+        {
+            cout<<"Error opening the file\n";
+            return;
+        }
+
+        string line;
+        getline(file, line);
+
+        while(getline(file, line))
+        {
+            string start="", end="", status="";
+            int i=0;
+
+            //Extract start intersection
+            while(i<line.length() && line[i]!=',')
+            {
+                start+=line[i];
+                i++;
+            }
+            i++;
+
+            //Extract end intersection
+            while(i<line.length() && line[i]!=',')
+            {
+                end=+line[i];
+                i++;
+            }
+            i++;
+
+            //Extract status
+            while(i<line.length())
+            {
+                status+=line[i];
+                i++;
+            }
+
+            bool isBlocked=(status=="Blocked");
+            RoadSegment *current=head;
+            while(current !=NULL)
+            {
+                if(current->startIntersection==start && current->endIntersection==end)
+                {
+                    current->isBlocked=isBlocked;
+                    break;
+                }
+                current=current->next;
+            }
+        }
+        file.close();
+    }
+
+    void monitorCongestion()
+    {
+        RoadSegment *current=head;
+        while(current!=NULL)
+        {
+            cout<<"Road: "<<current->startIntersection<<" -> "<<current->endIntersection<<", Travel Time: "<<current->travelTime;
+            cout<<", Status: "<<(current->isBlocked?"Blocked":"Clear")<<"\n";
+            current=current->next;
+        }
+    }
+
+    void identifyBlockedRoads()
+    {
+        RoadSegment *current=head;
+        cout<<"Blocked Roads:\n";
+        while(current!=NULL)
+        {
+            if(current->isBlocked)
+            {
+                cout<<"Road: "<<current->startIntersection<<" -> "<<current->endIntersection<<"\n";
+            }
+            current=current->next;
+        }
+    }
+
+    void rerouteTraffic(string start)
+    {
+        RoadSegment *current=head;
+        cout<<"Rerouting traffic from: "<<start<<"\n";
+        while(current!=NULL)
+        {
+            if(current->startIntersection==start && !current->isBlocked)
+            {
+                cout<<"Traffic rerouted to: "<<current->endIntersection<<"\n";
+            }
+            current=current->next;
+        }
+    }
+
+    ~RoadNetwork()
+    {
+        while(head!=NULL)
+        {
+            RoadSegment *temp=head;
+            head=head->next;
+            delete temp;
+        }
+    }
+
+};
 int main()
 {
     Graph graph(100);
     TrafficSignalManager tsm;
+    RoadNetwork rN;
     tsm.loadTrafficSignalTimings("traffic_signal_timings.csv");
     tsm.loadEmergencyVehicles("emergency_vehicles.csv");
     graph.loadRoadNetwork("road_network.csv");
+    rN.loadRoadNetwork("road_network.csv");
+    rN.loadAccidentOrClosures("accidents_or_closures.csv");
+
     while (true)
     {
         cout<<"Menu:\n";
@@ -490,7 +680,10 @@ int main()
         cout<<"3. Shortest path\n";
         cout<<"4. Route vehicles\n";
         cout<<"5. Manage Traffic\n";
-        cout<<"6. Exit\n";
+        cout<<"6. Monitor congestion\n";
+        cout<<"7. Identify blocked roads\n";
+        cout<<"8. Reroute traffic\n";
+        cout<<"9. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
@@ -518,7 +711,9 @@ int main()
         }
         else if (choice==2)
         {
+            cout<<endl;
             graph.displayGraph();
+            cout<<endl;
         }
         else if (choice==3)
         {
@@ -541,9 +736,32 @@ int main()
         }
         else if (choice==5)
         {
+            cout<<endl;
             tsm.manageTraffic();
+            cout<<endl;
         }
         else if (choice==6)
+        {
+            cout<<endl;
+            rN.monitorCongestion();
+            cout<<endl;
+        }
+        else if (choice==7)
+        {
+            cout<<endl;
+            rN.identifyBlockedRoads();
+            cout<<endl;
+        }
+        else if (choice==8)
+        {
+            string start;
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<endl;
+            rN.rerouteTraffic(start);
+            cout<<endl;
+        }
+        else if (choice==9)
         {
             break;
         }
