@@ -344,6 +344,7 @@ class EmergencyVehicle
         this->priorityLevel=priorityLevel;
         next=NULL;
     }
+        
 };
 
 class TrafficSignalManager
@@ -630,7 +631,7 @@ class RoadNetwork
         {
             if(current->isBlocked)
             {
-                cout<<"Road: "<<current->startIntersection<<" -> "<<current->endIntersection<<"\n";
+                cout<<"Road: "<<current->startIntersection<<" -> "<<current->endIntersection<<" is blocked"<<"\n";
             }
             current=current->next;
         }
@@ -650,6 +651,39 @@ class RoadNetwork
         }
     }
 
+    void blockRoad(string start, string end)
+    {
+        RoadSegment *current=head;
+        bool found=false;
+        while(current!=NULL)
+        {
+            if(current->startIntersection==start && current->endIntersection==end)
+            {
+                current->isBlocked=true;
+                found=true;
+                break;
+            }
+            current=current->next;
+        }
+
+        if(!found)
+        {
+            cout<<"Road from "<<start<<" to "<<end<<" not found in the network.\n";
+            return;
+        }
+
+        ofstream file("road_closures.csv", ios::app);
+        if(!file.is_open())
+        {
+            cout<<"Error opening the file\n";
+            return;
+        }
+        
+        file<<start<<","<<end<<",Blocked\n";
+        file.close();
+
+        cout<<"Road from "<<start<<" to "<<end<<" has been blocked.\n";
+    }
     ~RoadNetwork()
     {
         while(head!=NULL)
@@ -666,56 +700,79 @@ int main()
     Graph graph(100);
     TrafficSignalManager tsm;
     RoadNetwork rN;
-    tsm.loadTrafficSignalTimings("traffic_signal_timings.csv");
-    tsm.loadEmergencyVehicles("emergency_vehicles.csv");
+    tsm.loadTrafficSignalTimings("traffic_signals.csv");
     graph.loadRoadNetwork("road_network.csv");
     rN.loadRoadNetwork("road_network.csv");
-    rN.loadAccidentOrClosures("accidents_or_closures.csv");
+    rN.loadAccidentOrClosures("road_closures.csv");
 
     while (true)
     {
-        cout<<"Menu:\n";
-        cout<<"1. Add edge\n";
-        cout<<"2. Display graph\n";
-        cout<<"3. Shortest path\n";
-        cout<<"4. Route vehicles\n";
-        cout<<"5. Manage Traffic\n";
-        cout<<"6. Monitor congestion\n";
-        cout<<"7. Identify blocked roads\n";
-        cout<<"8. Reroute traffic\n";
+        cout<<"------ Simulation Dashboard ------\n";
+        cout<<"1. Display City Traffic Network\n";
+        cout<<"2. Display Traffic Signal Status \n";
+        cout<<"3. Display Congestion Status\n";
+        cout<<"4. Display Blocked Roads\n";
+        cout<<"5. Route vehicles\n";
+        cout<<"6. Block Road due to Accident\n";
+        cout<<"7. Reroute traffic\n";
+        cout<<"8. Shortest path\n";
         cout<<"9. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
-
         if (choice==1)
-        {
-            string start, end;
-            double weight;
-
-            cout<<"Enter start intersection: ";
-            cin>>start;
-            cout<<"Enter end intersection: ";
-            cin>>end;
-            cout<<"Enter travel time: ";
-            cin>>weight;
-
-            graph.addEdge(start, end, weight);
-
-            // Append the edge to the file
-            ofstream file("road_network.csv", ios::app);
-            file<<start<<","<<end<<","<<weight<<"\n";
-            file.close();
-
-            cout<<"Edge added and saved to file.\n";
-        }
-        else if (choice==2)
         {
             cout<<endl;
             graph.displayGraph();
             cout<<endl;
         }
+        else if (choice==2)
+        {
+            cout<<endl;
+            tsm.manageTraffic();
+            cout<<endl;
+        }
         else if (choice==3)
+        {
+            cout<<endl;
+            rN.monitorCongestion();
+            cout<<endl;
+        }
+        else if (choice==4)
+        {
+            cout<<endl;
+            rN.identifyBlockedRoads();
+            cout<<endl;
+        }
+        else if (choice==5)
+        {
+            VehicleRoutingSystem vrs(graph);
+            vrs.loadVehicles("vehicles.csv");
+            cout<<endl;
+            vrs.routeVehicles();
+            cout<<endl;
+        }
+        else if (choice==6)
+        {
+            string start, end;
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<"Enter end intersection: ";
+            cin>>end;
+            cout<<endl;
+            rN.blockRoad(start, end);
+            cout<<endl;
+        }
+        else if (choice==7)
+        {
+            string start;
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<endl;
+            rN.rerouteTraffic(start);
+            cout<<endl;
+        }
+        else if (choice==8)
         {
             string start, end;
             cout<<"Enter start intersection: ";
@@ -724,41 +781,6 @@ int main()
             cin>>end;
             cout<<endl;
             graph.dijkstra(start, end);
-            cout<<endl;
-        }
-        else if (choice==4)
-        {
-            VehicleRoutingSystem vrs(graph);
-            vrs.loadVehicles("vehicles.csv");
-            cout<<endl;
-            vrs.routeVehicles();
-            cout<<endl;
-        }
-        else if (choice==5)
-        {
-            cout<<endl;
-            tsm.manageTraffic();
-            cout<<endl;
-        }
-        else if (choice==6)
-        {
-            cout<<endl;
-            rN.monitorCongestion();
-            cout<<endl;
-        }
-        else if (choice==7)
-        {
-            cout<<endl;
-            rN.identifyBlockedRoads();
-            cout<<endl;
-        }
-        else if (choice==8)
-        {
-            string start;
-            cout<<"Enter start intersection: ";
-            cin>>start;
-            cout<<endl;
-            rN.rerouteTraffic(start);
             cout<<endl;
         }
         else if (choice==9)
