@@ -83,6 +83,9 @@ public:
 
         Edge *newEdge=new Edge{endIndex, weight, nodes[startIndex].edges};
         nodes[startIndex].edges=newEdge;
+
+        Edge *reverseEdge=new Edge{startIndex, weight, nodes[endIndex].edges};
+        nodes[endIndex].edges=reverseEdge;
     }
 
     void displayGraph()
@@ -157,7 +160,7 @@ public:
         bool *visited=new bool[nodeCount];
         int *previous=new int[nodeCount];
 
-        for (int i=0; i<nodeCount;i++)
+        for (int i=0;i<nodeCount;i++)
         {
             distances[i]=infinity;
             visited[i]=false;
@@ -171,7 +174,7 @@ public:
             int minIndex=-1;
             double minDistance=infinity;
 
-            for (int i=0; i<nodeCount;i++)
+            for (int i=0;i<nodeCount;i++)
             {
                 if (!visited[i] && distances[i]<minDistance)
                 {
@@ -213,7 +216,7 @@ public:
 
             int path[nodeCount];
             int count=0;
-            for (int at=endIndex; at != -1; at=previous[at])
+            for (int at=endIndex;at != -1;at=previous[at])
             {
                 path[count++]=at;
             }
@@ -234,8 +237,6 @@ public:
         delete[] visited;
         delete[] previous;
     }
-
-
 };
 
 class Vehicle
@@ -684,6 +685,128 @@ class RoadNetwork
 
         cout<<"Road from "<<start<<" to "<<end<<" has been blocked.\n";
     }
+
+    void dijkstraEmergency(const string &start, const string &end, Node *nodes, int nodeCount, int infinity) 
+    {
+        int startIndex=getNodesIndex(start, nodes, nodeCount);
+        int endIndex=getNodesIndex(end, nodes, nodeCount);
+    
+        if (startIndex==-1 || endIndex==-1)
+        {
+            cout<<"Invalid start or end intersection.\n";
+            return;
+        }
+    
+        double *distances=new double[nodeCount];
+        bool *visited=new bool[nodeCount];
+        int *previous=new int[nodeCount];
+    
+        for (int i=0;i<nodeCount;i++) 
+        {
+            distances[i]=infinity;
+            visited[i]=false;
+            previous[i]=-1;
+        }
+    
+        distances[startIndex]=0;
+    
+        while (true) 
+        {
+            int minIndex=-1;
+            double minDistance=infinity;
+    
+            for (int i=0;i<nodeCount;i++) 
+            {
+                if (!visited[i] && distances[i]<minDistance) 
+                {
+                    minDistance=distances[i];
+                    minIndex=i;
+                }
+            }
+    
+            if (minIndex==-1) 
+            {
+                break;
+            }
+    
+            visited[minIndex]=true;
+    
+            Edge *current=nodes[minIndex].edges;
+            while (current) 
+            {
+                int neighbor=current->end;
+                double weight=current->weight;
+    
+                // Check if the road is blocked
+                if (!visited[neighbor] && !isRoadBlocked(nodes[minIndex].id, nodes[neighbor].id) && distances[minIndex] + weight<distances[neighbor]) 
+                {
+                    distances[neighbor]=distances[minIndex] + weight;
+                    previous[neighbor]=minIndex;
+                }
+    
+                current=current->next;
+            }
+        }
+    
+        if (distances[endIndex]==infinity) 
+        {
+            cout<<"No path exists between "<<start<<" and "<<end<<".\n";
+        } 
+        else 
+        {
+            cout<<"Shortest path from "<<start<<" to "<<end<<" is "<<distances[endIndex]<<".\n";
+    
+            int path[nodeCount];
+            int count=0;
+            for (int at=endIndex;at != -1;at=previous[at]) 
+            {
+                path[count++]=at;
+            }
+    
+            cout<<"Path: ";
+            for (int i=count-1;i>=0;i--) 
+            {
+                if (i<count-1) 
+                {
+                    cout<<" -> ";
+                }
+                cout<<nodes[path[i]].id;
+            }
+            cout<<"\n";
+        }
+    
+        delete[] distances;
+        delete[] visited;
+        delete[] previous;
+    }
+    
+    // Helper function to check if a road is blocked
+    bool isRoadBlocked(const string &start, const string &end) 
+    {
+        RoadSegment *current=head;
+        while (current != NULL) 
+        {
+            if (current->startIntersection==start && current->endIntersection==end) 
+            {
+                return current->isBlocked;
+            }
+            current=current->next;
+        }
+        return false;
+    }
+    
+    // Helper function to get node index
+    int getNodesIndex(const string &id, Node *nodes, int nodeCount) 
+    {
+        for (int i=0;i<nodeCount;i++) 
+        {
+            if (nodes[i].id==id) 
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
     ~RoadNetwork()
     {
         while(head!=NULL)
@@ -712,11 +835,12 @@ int main()
         cout<<"2. Display Traffic Signal Status \n";
         cout<<"3. Display Congestion Status\n";
         cout<<"4. Display Blocked Roads\n";
-        cout<<"5. Route vehicles\n";
+        cout<<"5. Emergency Vehicle Routing\n";
         cout<<"6. Block Road due to Accident\n";
         cout<<"7. Reroute traffic\n";
         cout<<"8. Shortest path\n";
-        cout<<"9. Exit\n";
+        cout<<"9. Route vehicles\n";
+        cout<<"10. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
@@ -746,10 +870,13 @@ int main()
         }
         else if (choice==5)
         {
-            VehicleRoutingSystem vrs(graph);
-            vrs.loadVehicles("vehicles.csv");
+            string start, end;
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<"Enter end intersection: ";
+            cin>>end;
             cout<<endl;
-            vrs.routeVehicles();
+            rN.dijkstraEmergency(start, end, graph.nodes, graph.nodeCount, graph.infinity);
             cout<<endl;
         }
         else if (choice==6)
@@ -784,6 +911,14 @@ int main()
             cout<<endl;
         }
         else if (choice==9)
+        {
+            VehicleRoutingSystem vrs(graph);
+            vrs.loadVehicles("vehicles.csv");
+            cout<<endl;
+            vrs.routeVehicles();
+            cout<<endl;
+        }
+        else if (choice==10)
         {
             break;
         }
