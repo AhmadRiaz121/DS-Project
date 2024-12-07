@@ -2,7 +2,7 @@
 
 Traffic Simulation System
 Overview
-The Traffic Simulation System is an interactive C++ program designed to simulate and manage a city's traffic network. It provides functionalities such as visualizing the road network, managing traffic signals, rerouting traffic, finding shortest paths, and handling road closures or emergencies. The project leverages advanced algorithms and data structures for efficient simulation and routing.
+The Traffic Simulation System  provides functionalities such as visualizing the road network, managing traffic signals, rerouting traffic, finding shortest paths, and handling road closures or emergencies. The project leverages advanced algorithms and data structures for efficient simulation and routing.
 
 Features
 Display City Traffic Network
