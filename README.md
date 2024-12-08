@@ -2,98 +2,115 @@
 
 Traffic Simulation System
 Overview
-The Traffic Simulation System  provides functionalities such as visualizing the road network, managing traffic signals, rerouting traffic, finding shortest paths, and handling road closures or emergencies. The project leverages advanced algorithms and data structures for efficient simulation and routing.
+The Traffic Simulation System incorporates real-time data handling for traffic signals, road closures, vehicle routing, and congestion analysis. It also includes features for rerouting traffic during emergencies and accidents, making it a comprehensive tool for studying urban traffic management.
+
+The simulation supports a dynamic network of roads and vehicles, leveraging algorithms like Dijkstra’s Algorithm, Depth-First Search (DFS), and Priority Queue to solve complex routing and traffic flow problems efficiently.
 
 Features
+1. Display City Traffic Network
+Visualize the city’s road network graphically by displaying the intersections and connections between them.
+This view helps simulate the traffic flow and manage resources in real-time.
 
-Display City Traffic Network
-Visualize the city’s road network in a graph structure.
-
-
-Display Traffic Signal Status
-Simulate and display the current operational status of traffic signals.
-
-
-Display Congestion Status
-Analyze and display congestion levels across different roads in the network.
+2. Display Traffic Signal Status
+The system can manage and display the operational status of traffic signals across the city.
+Signals can be adjusted dynamically based on the current traffic conditions.
 
 
-Display Blocked Roads
-Identify and display roads that are blocked due to accidents or closures.
+3. Display Congestion Status
+Displays the congestion levels of roads based on vehicle density.
+Provides an overview of which roads are the most congested, helping city planners manage traffic effectively.
 
 
-Emergency Vehicle Routing
-Calculate the shortest and safest route for emergency vehicles between intersections using advanced routing algorithms.
+4. Display Blocked Roads
+Identify and display the roads that are blocked due to accidents or closures.
+Alerts users about potential obstacles to avoid.
 
 
-Block Road due to Accident
-Simulate road closures caused by accidents or maintenance work.
+5. Emergency Vehicle Routing
+This feature uses Dijkstra’s Algorithm to calculate the shortest and safest route for emergency vehicles, taking into account blocked roads and traffic congestion.
+The system automatically reroutes emergency vehicles to minimize response time.
 
 
-Reroute Traffic
-Reconfigure traffic flows to avoid congested or blocked areas dynamically.
+6. Block Road due to Accident
+Simulate road closures caused by accidents, maintenance, or other incidents.
+Mark affected roads and reroute vehicles dynamically to avoid traffic jams.
 
 
-Shortest Path
-Compute the shortest path between two intersections using Dijkstra's algorithm.
+7. Reroute Traffic
+The system dynamically reroutes traffic based on real-time conditions.
+It takes into account blocked roads, accidents, and congestion data to find optimal paths.
 
 
-Route Vehicles
-Simulate and route vehicles through the network while considering congestion and road conditions.
+8. Shortest Path
+Implements Dijkstra’s Algorithm to calculate the shortest path between two intersections.
+Supports the real-time update of traffic conditions, ensuring that the route remains optimal even if traffic conditions change.
 
 
-Simulate Vehicle Routing
-Identify all possible routes between two intersections for comprehensive analysis.
+9. Route Vehicles
+Allows the system to simulate the routing of multiple vehicles across the network.
+Traffic conditions, road closures, and emergency routes are considered to ensure the vehicles follow the most efficient paths.
 
 
-Exit
-Terminate the simulation program.
+10. Simulate Vehicle Routing
+Simulate all possible routes between two intersections.
+This feature provides insights into how vehicles can be routed under various conditions and helps in understanding traffic flow in a given area.
 
 
+11. Exit
+Terminates the simulation and closes the program.
 
-File Structure
-traffic_signals.csv
-Contains configuration data for traffic signals, including timing and location.
 
-road_network.csv
-Defines the road network, including intersections, roads, and connectivity.
+Data Files
+1. traffic_signals.csv
+Contains data for each traffic signal, including its location and timing information.
+This file is used to simulate and manage traffic signals across the network.
 
-road_closures.csv
-Stores data about roads that are blocked due to accidents or maintenance.
 
-vehicles.csv
-Contains details about vehicles, such as their starting points, destinations, and routing requirements.
+2. road_network.csv
+Defines the city’s road network with intersections, roads, and their connectivity.
+Used to create a graph structure for the road network.
+
+
+3. road_closures.csv
+Contains details about blocked roads due to accidents, construction, or other disruptions.
+Used to simulate road closures and reroute traffic dynamically.
+
+
+4. vehicles.csv
+Contains information about vehicles, such as their starting locations, destinations, and current status.
+This file helps simulate the routing of vehicles across the network based on traffic conditions.
+
+
 
 Algorithms and Data Structures Used
+1. Graph Representation
+The road network is represented as an undirected weighted graph using an adjacency list.
+Intersections are represented as nodes, and roads as edges between these nodes.
 
-
-Graph Representation
-
-Adjacency lists are used to represent the road network efficiently.
-
-
-Dijkstra's Algorithm
-
-Computes the shortest path between intersections.
-Utilizes a priority queue (min-heap) for optimal performance.
-
-
-Depth-First Search (DFS)
-
-Finds all possible routes between two intersections.
+![output 1](https://github.com/user-attachments/assets/638db7a7-2589-4dbc-8625-c7a62b6412fb)
 
 
 
-Priority Queue
-
-Used in Dijkstra's algorithm to prioritize nodes with the shortest tentative distance.
-
-
-Dynamic Rerouting
-
-Identifies alternative routes when roads are blocked or traffic conditions change.
+2. Dijkstra’s Algorithm
+Dijkstra’s Algorithm is employed to find the shortest path between two intersections.
+It uses a priority queue (min-heap) to efficiently select the next node with the smallest tentative distance from the source node.
 
 
-Traffic Congestion Analysis
+3. Depth-First Search (DFS)
+DFS is used to find all possible routes between two intersections, making it useful for simulating vehicle routing in a dynamic environment.
+DFS helps explore the entire network to identify alternative paths when one is blocked or congested.
 
-Aggregates data on vehicle density and road capacity to evaluate congestion levels.
+
+4. Priority Queue (Min-Heap)
+A priority queue (implemented using a min-heap) is used to optimize the pathfinding in Dijkstra's Algorithm.
+It allows for fast extraction of the node with the smallest distance, which is crucial for the algorithm's efficiency.
+
+
+5. Dynamic Rerouting
+When a road becomes blocked, the system automatically calculates new routes for affected vehicles.
+The rerouting algorithm considers traffic congestion and road closures.
+
+
+6. Traffic Congestion Analysis
+The congestion status is calculated based on vehicle density and road capacity.
+The system dynamically updates congestion levels to optimize traffic management.
