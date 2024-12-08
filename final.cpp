@@ -81,9 +81,11 @@ public:
             endIndex=nodeCount-1;
         }
 
+        // Add edge
         Edge *newEdge=new Edge{endIndex, weight, nodes[startIndex].edges};
         nodes[startIndex].edges=newEdge;
 
+        // Add reverse edge
         Edge *reverseEdge=new Edge{startIndex, weight, nodes[endIndex].edges};
         nodes[endIndex].edges=reverseEdge;
     }
@@ -102,6 +104,63 @@ public:
         }
     }
 
+    void findAllRoutesHelper(int start, int end, bool* visited, int* path, int pathIndex)
+    {
+        visited[start]=true;
+        path[pathIndex]=start;
+        pathIndex++;
+
+        if(start==end)
+        {
+            // Print the current path
+            for (int i=0; i<pathIndex; i++)
+            {
+                cout << nodes[path[i]].id;
+                if (i<pathIndex - 1) cout << " -> ";
+            }
+            cout << endl;
+        }
+        else
+        {
+            Edge* current = nodes[start].edges;
+            while (current)
+            {
+                if (!visited[current->end])
+                {
+                    findAllRoutesHelper(current->end, end, visited, path, pathIndex);
+                }
+                current = current->next;
+            }
+        }
+
+        // Backtrack
+        visited[start]=false;
+    }
+
+    void findAllRoutes(const string &start, const string &end)
+    {
+        int startIndex=getNodesIndex(start);
+        int endIndex=getNodesIndex(end);
+
+        if (startIndex==-1 || endIndex==-1)
+        {
+            cout<<"Invalid start or end intersection.\n";
+            return;
+        }
+
+        bool *visited=new bool[nodeCount];
+        int *path=new int[nodeCount];
+        for(int i=0;i<nodeCount;i++)
+        {
+            visited[i]=false;
+        }
+
+        cout<<"All possible routes from "<<start<<" to "<<end<<":\n";
+        findAllRoutesHelper(startIndex, endIndex, visited, path, 0);
+
+        delete[] visited;
+        delete[] path;
+    }
     void loadRoadNetwork(const string &filename)
     {
         ifstream file(filename);
@@ -442,6 +501,31 @@ class TrafficSignalManager
         file.close();
     }
 
+    bool comparePriority(string priority1, string priority2)
+    {
+        return priority1<priority2;
+    }
+    
+    void insertEmergencyVehicleSorted(EmergencyVehicle *newVehicle)
+    {
+        //Priority Queue
+        if(emergencyHead==NULL || comparePriority(newVehicle->priorityLevel, emergencyHead->priorityLevel))
+        {
+            newVehicle->next=emergencyHead;
+            emergencyHead=newVehicle;
+        }
+        else
+        {
+            EmergencyVehicle *current=emergencyHead;
+            while(current->next!=NULL && !comparePriority(newVehicle->priorityLevel, current->next->priorityLevel))
+            {
+                current=current->next;
+            }
+            newVehicle->next=current->next;
+            current->next=newVehicle;
+        }
+    }
+
     void manageTraffic()
     {
         Intersection *current=head;
@@ -552,6 +636,7 @@ class RoadNetwork
                 i++;
             }
 
+            // Convert travel time to integer
             int travelTime=stoi(timeStr);
             addRoadSegment(start, end, travelTime);
         }
@@ -818,6 +903,7 @@ class RoadNetwork
     }
 
 };
+
 int main()
 {
     Graph graph(100);
@@ -827,6 +913,8 @@ int main()
     graph.loadRoadNetwork("road_network.csv");
     rN.loadRoadNetwork("road_network.csv");
     rN.loadAccidentOrClosures("road_closures.csv");
+    tsm.loadTrafficSignalTimings("traffic_signals.csv");
+    tsm.loadEmergencyVehicles("emergency_vehicles.csv");
 
     while (true)
     {
@@ -840,7 +928,8 @@ int main()
         cout<<"7. Reroute traffic\n";
         cout<<"8. Shortest path\n";
         cout<<"9. Route vehicles\n";
-        cout<<"10. Exit\n";
+        cout<<"10. Simulate Vehicle Routing\n";
+        cout<<"11. Exit\n";
         cout<<"Enter your choice: ";
         int choice;
         cin>>choice;
@@ -919,6 +1008,17 @@ int main()
             cout<<endl;
         }
         else if (choice==10)
+        {
+            string start,end;
+            cout<<"Enter start intersection: ";
+            cin>>start;
+            cout<<"Enter end intersection: ";
+            cin>>end;
+            cout<<endl;
+            graph.findAllRoutes(start, end);
+            cout<<endl;
+        }
+        else if (choice==11)
         {
             break;
         }
